@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tag Frequency Graph</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      background: #f4f4f4;
+      color: #333;
+    }
+    canvas {
+      max-width: 100%;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <h2>📊 Tag Frequency Over Time</h2>
+  <canvas id="tagsChart" width="800" height="400"></canvas>
+
+  <script>
+    async function fetchDataAndRenderChart() {
+      try {
+        const res = await fetch("https://dhp-project.onrender.com/data");
+        const rawData = await res.json();
+
+        // Get all years dynamically
+        const allYears = new Set();
+        Object.values(rawData).forEach(yearObj => {
+          Object.keys(yearObj).forEach(y => allYears.add(y));
+        });
+        const years = Array.from(allYears).sort();
+
+        // Build datasets
+        const datasets = Object.entries(rawData).map(([tag, yearData]) => ({
+          label: tag,
+          data: years.map(y => yearData[y] || 0),
+          borderColor: '#' + Math.floor(Math.random()*16777215).toString(16),
+          fill: false,
+          tension: 0.4
+        }));
+
+        // Chart.js
+        const ctx = document.getElementById('tagsChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: years,
+            datasets: datasets
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: 'top' },
+              title: { display: true, text: 'Tag Frequency (%) by Year' }
+            },
+            scales: {
+              x: { title: { display: true, text: 'Year' }},
+              y: { title: { display: true, text: 'Percentage (%)' }}
+            }
+          }
+        });
+      } catch (err) {
+        console.error("Error loading chart data:", err);
+      }
+    }
+
+    fetchDataAndRenderChart();
+  </script>
+</body>
+</html>
